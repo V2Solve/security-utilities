@@ -9,16 +9,20 @@ import java.util.StringTokenizer;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configurers.provisioning.JdbcUserDetailsManagerConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
+import org.springframework.util.StringUtils;
 
+import com.v2solve.app.security.config.BasicSecurityProperties.JDBCAuthSetup;
 
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -69,16 +73,45 @@ public class BasicSecurityConfig extends CommonConfigAdapter
 	 */
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth,
-    		@Autowired DataSource dataSource,
+    		@Autowired ApplicationContext appCtx,
     		@Autowired Environment springEnv) 
     throws Exception 
     {
     	log.debug("configuring the jdbc authentication for basic auth.");
     	
-    	auth.jdbcAuthentication()
-    	    .dataSource(dataSource)
-    	    .usersByUsernameQuery("select name as username,user_password as password,enabled from basic_auth_clients where name = ?")
-    	    .authoritiesByUsernameQuery("select name as username,'ADMIN' as authority from basic_auth_clients where name = ?");
+    	if (basicSecurityProperties.getJdbc() != null)
+    	{
+    		JDBCAuthSetup jdbcSetup = basicSecurityProperties.getJdbc();
+    		
+    		if (jdbcSetup.isEnable())
+    		{
+    			DataSource ds = null;
+    			String dataSourceBeanName = jdbcSetup.getDataSourceBeanName();
+    			if (StringUtils.isEmpty(dataSourceBeanName))
+    			  	ds = appCtx.getBean(DataSource.class);
+    			else
+    				ds = appCtx.getBean(dataSourceBeanName,DataSource.class);
+    			
+    			if (ds == null)
+    				throw new RuntimeException("No Datasource bean found("+dataSourceBeanName!=null?dataSourceBeanName:""+"), missing configuration? cannot setup Basic Authentication for JDBC");
+    					
+    			JdbcUserDetailsManagerConfigurer<?> configurer = auth.jdbcAuthentication().dataSource(ds);
+    			
+    			if (!StringUtils.isEmpty(jdbcSetup.getUsersByUsernameQuery()))
+    				configurer.usersByUsernameQuery(jdbcSetup.getUsersByUsernameQuery());
+    			
+    			if (!StringUtils.isEmpty(jdbcSetup.getAuthoritiesByUsernameQuery()))
+    				configurer.authoritiesByUsernameQuery(jdbcSetup.getAuthoritiesByUsernameQuery());
+    			
+    			/*
+		    	auth.jdbcAuthentication()
+		    	    .dataSource(dataSource)
+		    	    .usersByUsernameQuery("select name as username,user_password as password,enabled from basic_auth_clients where name = ?")
+		    	    .authoritiesByUsernameQuery("select name as username,'ADMIN' as authority from basic_auth_clients where name = ?");
+		    	 */
+    			log.info("JDBC Authentication setup.");
+    		}
+    	}
     	
     	List<BasicAuthUser> basicUserList = basicSecurityProperties.getUsers();
     		
