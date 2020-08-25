@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.v2solve.app.security</groupId>
   <artifactId>app-security-oauth2-support</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>233.1.1.RELEASE</version>
   <name>app-security-oauth2-support</name>
   <description>A library which supports easy setup of Authentication extending Spring Security</description>
   
@@ -60,5 +60,14 @@
     </dependency>
 	
 </dependencies>
+
+
+<distributionManagement>
+   <repository>
+     <id>github</id>
+     <name>GitHub OWNER Apache Maven Packages</name>
+     <url>https://maven.pkg.github.com/V2Solve/security-utilities</url>
+   </repository>
+</distributionManagement>
   
 </project>
