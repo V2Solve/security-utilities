@@ -3,14 +3,14 @@ package com.v2solve.app.security.config;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties.Provider;
 import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties.Registration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.StringUtils;
+
 
 import com.v2solve.app.security.utility.oauth2.ClientCredentialManager;
 import com.v2solve.app.security.utility.oauth2.ExtendedOAuth2ClientProperties;
